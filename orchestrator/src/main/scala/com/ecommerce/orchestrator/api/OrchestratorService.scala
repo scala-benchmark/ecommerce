@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.{Route, Directives}
 import akka.util.Timeout
-import com.ecommerce.orchestrator.api.routes.{ShoppingRoutes, ReceivingRoutes}
+import com.ecommerce.orchestrator.api.routes.{ShoppingRoutes, ReceivingRoutes, AdminRoutes}
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
@@ -17,7 +17,7 @@ case class OrchestratorService(val system: ActorSystem, val requestTimeout: Time
   val executionContext = system.dispatcher
 }
 
-trait OrchestratorRoutes extends ReceivingRoutes with ShoppingRoutes {
+trait OrchestratorRoutes extends ReceivingRoutes with ShoppingRoutes with AdminRoutes {
   import Directives._
 
   def system: ActorSystem
@@ -27,7 +27,8 @@ trait OrchestratorRoutes extends ReceivingRoutes with ShoppingRoutes {
 
   def routes: Route =
     receivingRoutes ~
-    shoppingRoutes
+    shoppingRoutes ~
+    adminRoutes
 
   val IdSegment = Segment.flatMap(id => Try(UUID.fromString(id)).toOption)
 }

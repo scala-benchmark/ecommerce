@@ -10,7 +10,7 @@ import com.ecommerce.common.clientactors.http.HttpClient.HttpClientResult
 import com.ecommerce.common.identity.Identity.{ProductRef, ShipmentRef}
 import com.ecommerce.orchestrator.backend.orchestrator.ReceivingOrchestrator
 import com.ecommerce.orchestrator.backend.{RequestViews, ResponseViews}
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import scala.concurrent.ExecutionContext
 
@@ -19,9 +19,8 @@ import scala.concurrent.ExecutionContext
   */
 trait ReceivingRoutes {
   import Directives._
-  import CirceSupport._
+  import FailFastCirceSupport._
   import io.circe.generic.auto._
-  import io.circe.java8.time._
   import ReceivingOrchestrator._
   import RequestViews._
   import ResponseViews._

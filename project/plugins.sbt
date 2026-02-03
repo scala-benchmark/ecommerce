@@ -1,14 +1,12 @@
 resolvers += Classpaths.typesafeReleases
 
-resolvers += Resolver.bintrayRepo("hseeberger", "maven")
-
 resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/maven-releases/"
 
 resolvers += Resolver.sonatypeRepo("releases")
 
-addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.13.0")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "2.1.5")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-multi-jvm" % "0.3.8")
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.8.21")
 
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.5.10")
+libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 

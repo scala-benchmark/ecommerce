@@ -10,7 +10,7 @@ import com.ecommerce.common.clientactors.protocols.ProductProtocol._
 import com.ecommerce.common.identity.Identity.{ManufacturerRef, CategoryRef, ProductRef}
 import com.ecommerce.productcatalog.backend.actor.{ManufacturerSearch, CategorySearch, ProductSearch}
 import com.ecommerce.productcatalog.backend.data.{Product, Category, Manufacturer}
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
@@ -26,7 +26,7 @@ trait ProductRoutes {
 
   import Directives._
   import StatusCodes._
-  import CirceSupport._
+  import FailFastCirceSupport._
   import io.circe.generic.auto._
   import akka.pattern.ask
   import ResponseMappers._

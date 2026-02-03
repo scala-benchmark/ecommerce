@@ -2,10 +2,8 @@ package com.ecommerce.orchestrator.backend.orchestrator
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.util.Timeout
-import cats.{Traverse, Applicative}
 import cats.data._
 import cats.implicits._
-import cats._
 import com.ecommerce.common.clientactors.http.HttpClient
 import com.ecommerce.common.views.InventoryResponse.InventoryItemView
 import com.ecommerce.common.views.ProductResponse.ProductView
@@ -42,10 +40,11 @@ class ProductOrchestrator extends Actor with ActorLogging
 
   def receive = {
     case SearchByProductId(pid) =>
-      val p = EitherT(getProductByProductId(pid))
-      val i = EitherT(getInventoryItem(pid))
-      Applicative[EitherT[Future, HttpClientError, ?]].map2(p, i)(mapToProductSummaryView)
-        .value.pipeTo(sender())
+      val result: EitherT[Future, HttpClientError, ProductSummaryView] = for {
+        p <- EitherT(getProductByProductId(pid))
+        i <- EitherT(getInventoryItem(pid))
+      } yield mapToProductSummaryView(p, i)
+      result.value.pipeTo(sender())
       kill()
     case SearchByCategoryId(cid) =>
       getMergedProductSummary(getProductsByCategoryId(cid)).value.pipeTo(sender())
@@ -56,13 +55,14 @@ class ProductOrchestrator extends Actor with ActorLogging
   }
 
   private def getMergedProductSummary(productList: Future[Either[HttpClientError, List[ProductView]]]): EitherT[Future, HttpClientError, List[ProductSummaryView]] = {
-    val plET: EitherT[Future, HttpClientError, List[ProductView]] = EitherT(productList)
-    val ilET: EitherT[Future, HttpClientError, List[InventoryItemView]] =
-      plET.flatMap(_.traverseU(p => EitherT(getInventoryItem(ProductRef(p.productId)))))
-
-    Applicative[EitherT[Future, HttpClientError, ?]].map2(plET, ilET) { (pl, il) =>
-      (pl, il).zipped map {(p, i) => mapToProductSummaryView(p, i)}
-    }
+    for {
+      pl <- EitherT(productList)
+      il <- EitherT(Future.sequence(pl.map(p => getInventoryItem(ProductRef(p.productId)))).map { results =>
+        val errors = results.collect { case Left(e) => e }
+        if (errors.nonEmpty) Left(errors.head)
+        else Right(results.collect { case Right(v) => v })
+      })
+    } yield pl.zip(il).map { case (p, i) => mapToProductSummaryView(p, i) }
   }
 
   def kill() = {

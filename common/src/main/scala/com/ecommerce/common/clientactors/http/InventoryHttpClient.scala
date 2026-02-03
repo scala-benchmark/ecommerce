@@ -7,7 +7,7 @@ import akka.actor.{ActorLogging, Props, Actor}
 import akka.http.scaladsl.model.Uri.Path
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.{Sink, Source}
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import scala.concurrent.Future
 import com.ecommerce.common.views.InventoryRequest
 import com.ecommerce.common.views.InventoryResponse
@@ -51,10 +51,9 @@ class InventoryHttpClient extends Actor with ActorLogging with InventoryHttpClie
 }
 
 trait InventoryHttpClientApi extends HttpClient {
-  import CirceSupport._
+  import FailFastCirceSupport._
   import io.circe.generic.auto._
   import io.circe.syntax._
-  import io.circe.java8.time._
   import InventoryRequest._
   import InventoryResponse._
   import HttpClient._
