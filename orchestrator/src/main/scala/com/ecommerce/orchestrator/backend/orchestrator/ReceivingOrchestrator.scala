@@ -5,7 +5,6 @@ import java.util.UUID
 
 import akka.actor.{ActorLogging, Actor, Props}
 import akka.util.Timeout
-import cats.Applicative
 import cats.data.EitherT
 import cats.implicits._
 import com.ecommerce.common.clientactors.http.HttpClient.HttpClientError
@@ -42,33 +41,32 @@ class ReceivingOrchestrator extends Actor with ActorLogging
 
   def receive = {
     case GetShipmentSummary(sid) =>
-      // Need Monads for control flow here, since getInventoryItem depends on the productId
-      // retreived from getShipment
       val result: EitherT[Future, HttpClientError, ReceivingSummaryView] = for {
         gs <- EitherT(getShipment(sid))
         gi <- EitherT(getInventoryItem(ProductRef(gs.productId)))
       } yield mapToReceivingSummaryView(gs, gi)
       result.value.pipeTo(sender())
       kill()
-      // The rest of these cases can use Applicative.map2, because the results are just being combined -
-      // no control flow needed here.
     case RequestShipment(pid, o, c) =>
-      val cs = EitherT(createShipment(pid, o, c))
-      val gi = EitherT(getInventoryItem(pid))
-      Applicative[EitherT[Future, HttpClientError, ?]].map2(cs, gi)(mapToReceivingSummaryView)
-        .value.pipeTo(sender())
+      val result: EitherT[Future, HttpClientError, ReceivingSummaryView] = for {
+        cs <- EitherT(createShipment(pid, o, c))
+        gi <- EitherT(getInventoryItem(pid))
+      } yield mapToReceivingSummaryView(cs, gi)
+      result.value.pipeTo(sender())
       kill()
     case AcknowledgeShipment(iid, sid, ed, c) =>
-      val as = EitherT(acknowledgeShipment(sid, ed))
-      val ns = EitherT(notifySupply(iid, sid, ed, c))
-      Applicative[EitherT[Future, HttpClientError, ?]].map2(as, ns)(mapToReceivingSummaryView)
-        .value.pipeTo(sender())
+      val result: EitherT[Future, HttpClientError, ReceivingSummaryView] = for {
+        as <- EitherT(acknowledgeShipment(sid, ed))
+        ns <- EitherT(notifySupply(iid, sid, ed, c))
+      } yield mapToReceivingSummaryView(as, ns)
+      result.value.pipeTo(sender())
       kill()
     case AcceptShipment(iid, sid, d, c) =>
-      val as = EitherT(acceptShipment(sid))
-      val rs = EitherT(receiveSupply(iid, sid, d, c))
-      Applicative[EitherT[Future, HttpClientError, ?]].map2(as, rs)(mapToReceivingSummaryView)
-        .value.pipeTo(sender())
+      val result: EitherT[Future, HttpClientError, ReceivingSummaryView] = for {
+        as <- EitherT(acceptShipment(sid))
+        rs <- EitherT(receiveSupply(iid, sid, d, c))
+      } yield mapToReceivingSummaryView(as, rs)
+      result.value.pipeTo(sender())
       kill()
   }
 

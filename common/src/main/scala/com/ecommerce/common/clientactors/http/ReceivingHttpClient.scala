@@ -8,7 +8,7 @@ import akka.http.scaladsl.model.Uri.Path
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.{Sink, Source}
 import com.ecommerce.common.identity.Identity
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import com.ecommerce.common.clientactors.protocols.ReceivingProtocol
 import com.ecommerce.common.views.ReceivingRequest
 import com.ecommerce.common.views.ReceivingResponse
@@ -45,10 +45,9 @@ class ReceivingHttpClient extends Actor with ReceivingHttpClientApi {
 
 trait ReceivingHttpClientApi extends HttpClient {
 
-  import CirceSupport._
+  import FailFastCirceSupport._
   import io.circe.generic.auto._
   import io.circe.syntax._
-  import io.circe.java8.time._
   import ReceivingRequest._
   import ReceivingResponse._
   import HttpClient._

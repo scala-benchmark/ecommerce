@@ -13,7 +13,7 @@ import com.ecommerce.common.views.PaymentRequest
 import com.ecommerce.common.identity.Identity._
 import com.ecommerce.inventory.backend.domain.{Reservation, Shipment}
 
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
@@ -26,9 +26,8 @@ class InventoryService(val inventoryItems: ActorRef, val system: ActorSystem, va
 
 trait InventoryRoutes {
   import Directives._
-  import CirceSupport._
+  import FailFastCirceSupport._
   import io.circe.generic.auto._
-  import io.circe.java8.time._
   import InventoryRequest._
   import PaymentRequest._
   import ResponseMappers._

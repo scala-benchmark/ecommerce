@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.{Route, Directives}
 import akka.http.scaladsl.model.StatusCodes
 import akka.util.Timeout
 import com.ecommerce.ordertracking.api.RequestViews.{UpdateOrderItemView, CreateOrderView}
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
@@ -22,7 +22,7 @@ class OrdersService(val orders: ActorRef, val system: ActorSystem, val requestTi
 trait OrdersRoutes {
   import Directives._
   import StatusCodes._
-  import CirceSupport._
+  import FailFastCirceSupport._
   import io.circe.generic.auto._
 
   def orders: ActorRef

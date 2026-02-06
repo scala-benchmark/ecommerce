@@ -12,7 +12,7 @@ import com.ecommerce.common.views.ShoppingCartRequest.AddItemView
 import com.ecommerce.common.views.ShoppingCartResponse.ShoppingCartView
 import com.ecommerce.orchestrator.backend.RequestViews
 import com.ecommerce.orchestrator.backend.orchestrator.ShoppingOrchestrator
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import scala.concurrent.ExecutionContext
 
@@ -20,7 +20,7 @@ import scala.concurrent.ExecutionContext
   * Created by lukewyman on 1/31/17.
   */
 trait ShoppingRoutes {
-  import CirceSupport._
+  import FailFastCirceSupport._
   import Directives._
   import RequestViews._
   import ShoppingOrchestrator._

@@ -13,5 +13,9 @@ object Shipments {
 
 class Shipments extends Actor {
 
-  def receive = ???
+  def receive: Receive = {
+    case msg => 
+      // Placeholder implementation for shipments actor
+      sender() ! akka.actor.Status.Failure(new UnsupportedOperationException("Shipments not implemented"))
+  }
 }

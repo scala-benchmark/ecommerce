@@ -10,7 +10,7 @@ import akka.actor.{Actor, ActorLogging, Props}
 import akka.http.scaladsl.model.Uri.Path
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.{Sink, Source}
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 /**
   * Created by lukewyman on 2/5/17.
@@ -40,7 +40,7 @@ class ShoppingCartHttpClient extends Actor with ActorLogging with ShoppingCartHt
 }
 
 trait ShoppingCartHttpClientApi extends HttpClient {
-  import CirceSupport._
+  import FailFastCirceSupport._
   import io.circe.generic.auto._
   import io.circe.syntax._
   import ShoppingCartRequest._

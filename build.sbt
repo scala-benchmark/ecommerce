@@ -17,9 +17,9 @@ lazy val common = project.in(file("common")).settings(commonSettings)
 
 lazy val orchestratorSettings = Seq(
   scalaVersion := Version.scala,
-  mainClass in Global := Some("com.ecommerce.orchestrator.Boot"),
-  assemblyJarName in assembly := "orchestrator.jar",
-  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3"),
+  Global / mainClass := Some("com.ecommerce.orchestrator.Boot"),
+  assembly / assemblyJarName := "orchestrator.jar",
+  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
   libraryDependencies ++=
     Groupings.akkaBasics ++
     Groupings.akkaHttp ++
@@ -27,7 +27,9 @@ lazy val orchestratorSettings = Seq(
     Seq(
       Library.scalaTest % "test",
       Library.jodaTime,
-      Library.cats
+      Library.catsCore,
+      Library.betterFiles,
+      Library.scalatags
     )
 )
 
@@ -35,8 +37,8 @@ lazy val orchestrator = project.in(file("orchestrator")).settings(orchestratorSe
 
 lazy val customersSettings = Seq(
   scalaVersion := Version.scala,
-  mainClass in Global := Some("com.ecommerce.customers.Boot"),
-  assemblyJarName in assembly := "customers.jar",
+  Global / mainClass := Some("com.ecommerce.customers.Boot"),
+  assembly / assemblyJarName := "customers.jar",
   libraryDependencies ++= Seq(
     Library.akkaActor,
     Library.akkaHttp,
@@ -49,8 +51,8 @@ lazy val customers = project.in(file("customers")).settings(customersSettings)
 
 lazy val fulfillmentSettings = Seq(
   scalaVersion := Version.scala,
-  mainClass in Global := Some("com.ecommerce.fulfillment.Boot"),
-  assemblyJarName in assembly := "fulfillment.jar",
+  Global / mainClass := Some("com.ecommerce.fulfillment.Boot"),
+  assembly / assemblyJarName := "fulfillment.jar",
   libraryDependencies ++= Seq(
     Library.akkaActor,
     Library.akkaHttp,
@@ -63,9 +65,9 @@ lazy val fulfillment = project.in(file("fulfillment")).settings(fulfillmentSetti
 
 lazy val inventorySettings = Seq(
   scalaVersion := Version.scala,
-  assemblyJarName in assembly := "inventory.jar",
-  resolvers ++= Seq("Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
-    "Sonatype snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots/"),
+  assembly / assemblyJarName := "inventory.jar",
+  resolvers ++= Seq("Typesafe Repository" at "https://repo.typesafe.com/typesafe/releases/",
+    "Sonatype snapshots"  at "https://oss.sonatype.org/content/repositories/snapshots/"),
   libraryDependencies ++=
     Groupings.akkaBasics ++
     Groupings.akkaPersistence ++
@@ -82,8 +84,8 @@ lazy val inventory = project.in(file("inventory")).settings(inventorySettings).d
 
 lazy val orderTrackingSettings = Seq(
   scalaVersion := Version.scala,
-  mainClass in Global := Some("com.ecommerce.ordertracking.Boot"),
-  assemblyJarName in assembly := "ordertracking.jar",
+  Global / mainClass := Some("com.ecommerce.ordertracking.Boot"),
+  assembly / assemblyJarName := "ordertracking.jar",
   libraryDependencies ++=
     Groupings.akkaBasics ++
     Groupings.akkaCluster ++
@@ -97,12 +99,19 @@ lazy val `order-tracking` = project.in(file("order-tracking")).settings(orderTra
 
 lazy val paymentSettings = Seq(
   scalaVersion := Version.scala,
-  mainClass in Global := Some("com.ecommerce.payment.Boot"),
-  assemblyJarName in assembly := "payment.jar",
+  Global / mainClass := Some("com.ecommerce.payment.Boot"),
+  assembly / assemblyJarName := "payment.jar",
   libraryDependencies ++=
     Groupings.akkaBasics ++
     Groupings.akkaHttp ++
-    Groupings.circe
+    Groupings.circe ++
+    Seq(
+      Library.zio,
+      Library.zioJdbc,
+      Library.postgresql,
+      Library.scalaCompiler,
+      Library.scalatags
+    )
 )
 
 lazy val payment = project.in(file("payment")).settings(paymentSettings)
@@ -110,9 +119,9 @@ lazy val payment = project.in(file("payment")).settings(paymentSettings)
 
 lazy val productcatalogSettings = Seq(
   scalaVersion := Version.scala,
-  mainClass in Global := Some("com.ecommerce.productcatalog.Boot"),
-  assemblyJarName in assembly := "productcatalog.jar",
-  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3"),
+  Global / mainClass := Some("com.ecommerce.productcatalog.Boot"),
+  assembly / assemblyJarName := "productcatalog.jar",
+  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
   libraryDependencies ++=
     Groupings.akkaBasics ++
     Groupings.akkaHttp ++
@@ -129,14 +138,19 @@ lazy val `product-catalog` = project.in(file("product-catalog")).settings(produc
 
 lazy val receivingSettings = Seq(
   scalaVersion := Version.scala,
-  mainClass in Global := Some("com.ecommerce.receiving.Boot"),
-  assemblyJarName in assembly := "receiving.jar",
+  Global / mainClass := Some("com.ecommerce.receiving.Boot"),
+  assembly / assemblyJarName := "receiving.jar",
   libraryDependencies ++=
     Groupings.akkaBasics ++
     Groupings.akkaPersistence ++
     Groupings.akkaCluster ++
     Groupings.akkaHttp ++
-    Groupings.circe
+    Groupings.circe ++
+    Seq(
+      Library.dsiLdap,
+      Library.catsEffect,
+      Library.scalatags
+    )
 )
 
 
@@ -145,8 +159,8 @@ lazy val receiving = project.in(file("receiving")).settings(receivingSettings).d
 
 lazy val shippingSettings = Seq(
   scalaVersion := Version.scala,
-  mainClass in Global := Some("com.ecommerce.shipping.Boot"),
-  assemblyJarName in assembly := "shipping.jar",
+  Global / mainClass := Some("com.ecommerce.shipping.Boot"),
+  assembly / assemblyJarName := "shipping.jar",
   libraryDependencies ++=
     Groupings.akkaBasics ++
       Groupings.akkaPersistence ++
@@ -159,10 +173,10 @@ lazy val shipping = project.in(file("shipping")).settings(shippingSettings)
 
 lazy val shoppingcartSettings = Seq(
   scalaVersion := Version.scala,
-  mainClass in Global := Some("com.ecommerce.shoppingcart.Boot"),
-  assemblyJarName in assembly := "shoppingcart.jar",
-  resolvers ++= Seq("Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
-    "Sonatype snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots/"),
+  Global / mainClass := Some("com.ecommerce.shoppingcart.Boot"),
+  assembly / assemblyJarName := "shoppingcart.jar",
+  resolvers ++= Seq("Typesafe Repository" at "https://repo.typesafe.com/typesafe/releases/",
+    "Sonatype snapshots"  at "https://oss.sonatype.org/content/repositories/snapshots/"),
   libraryDependencies ++=
     Groupings.akkaBasics ++
     Groupings.akkaCluster ++
@@ -171,7 +185,8 @@ lazy val shoppingcartSettings = Seq(
     Groupings.circe ++
     Seq(
       Library.scalaTest % "test",
-      Library.akkaTestKit % "test"
+      Library.akkaTestKit % "test",
+      Library.scalatags
     )
 )
 

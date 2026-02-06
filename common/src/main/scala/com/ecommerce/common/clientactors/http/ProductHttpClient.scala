@@ -7,7 +7,7 @@ import akka.stream.scaladsl.{Sink, Source}
 import com.ecommerce.common.clientactors.protocols.ProductProtocol
 import com.ecommerce.common.identity.Identity
 import com.ecommerce.common.views.ProductResponse
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import scala.concurrent.Future
 
@@ -38,7 +38,7 @@ class ProductHttpClient extends Actor with ActorLogging with ProductHttpClientAp
 }
 
 trait ProductHttpClientApi extends HttpClient{
-  import CirceSupport._
+  import FailFastCirceSupport._
   import io.circe.generic.auto._
   import io.circe.syntax._
   import Identity._

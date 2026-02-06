@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+
+  openldap:
+    image: osixia/openldap:1.5.0
+    container_name: ecommerce-ldap
+    environment:
+      LDAP_ORGANISATION: "E-Commerce"
+      LDAP_DOMAIN: "ecommerce.com"
+      LDAP_ADMIN_PASSWORD: "admin"
+      LDAP_CONFIG_PASSWORD: "config"
+      LDAP_READONLY_USER: "true"
+      LDAP_READONLY_USER_USERNAME: "readonly"
+      LDAP_READONLY_USER_PASSWORD: "readonly"
+    ports:
+      - "1389:389"
+      - "1636:636"
+    volumes:
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
+      - ./ldap-init:/container/service/slapd/assets/config/bootstrap/ldif/custom
+    command: "--copy-service"
+
+  # phpLDAPadmin for easy LDAP management
+  phpldapadmin:
+    image: osixia/phpldapadmin:0.9.0
+    container_name: ecommerce-ldap-admin
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: "openldap"
+      PHPLDAPADMIN_HTTPS: "false"
+    ports:
+      - "8081:80"
+    depends_on:
+      - openldap
+
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: ecommerce-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: payments
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+
+volumes:
+  ldap_data:
+  ldap_config:
+  postgres_data:

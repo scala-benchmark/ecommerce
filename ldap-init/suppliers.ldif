@@ -1,0 +1,36 @@
+dn: ou=suppliers,dc=ecommerce,dc=com
+objectClass: organizationalUnit
+ou: suppliers
+description: Supplier directory
+
+dn: cn=Acme Corp,ou=suppliers,dc=ecommerce,dc=com
+objectClass: inetOrgPerson
+cn: Acme Corp
+sn: Corp
+mail: contact@acmecorp.com
+telephoneNumber: +1-555-0101
+description: Industrial supplies vendor
+
+dn: cn=TechParts Inc,ou=suppliers,dc=ecommerce,dc=com
+objectClass: inetOrgPerson
+cn: TechParts Inc
+sn: Inc
+mail: sales@techparts.com
+telephoneNumber: +1-555-0102
+description: Electronic components supplier
+
+dn: cn=Global Logistics,ou=suppliers,dc=ecommerce,dc=com
+objectClass: inetOrgPerson
+cn: Global Logistics
+sn: Logistics
+mail: info@globallogistics.com
+telephoneNumber: +1-555-0103
+description: Shipping and logistics partner
+
+dn: cn=Prime Materials,ou=suppliers,dc=ecommerce,dc=com
+objectClass: inetOrgPerson
+cn: Prime Materials
+sn: Materials
+mail: orders@primematerials.com
+telephoneNumber: +1-555-0104
+description: Raw materials supplier
