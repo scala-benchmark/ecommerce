@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Document Viewer - Inventory</title>
+  <style>
+    :root { --bg: #0a0a1a; --surface: #141428; --border: #2a2a4a; --accent: #6366f1; --text: #e4e4f0; --muted: #8888a8; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem; }
+    .container { max-width: 960px; margin: 0 auto; }
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
+    .header svg { width: 32px; height: 32px; color: var(--accent); }
+    .header h1 { font-size: 1.5rem; font-weight: 600; }
+    .meta-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; }
+    .meta-label { color: var(--muted); font-size: 0.85rem; }
+    .meta-value { color: var(--accent); font-family: 'Courier New', monospace; font-size: 0.9rem; }
+    .content-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .content-header { padding: 0.75rem 1.25rem; background: rgba(99, 102, 241, 0.08); border-bottom: 1px solid var(--border); font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .content-body { padding: 1.25rem; white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 0.875rem; line-height: 1.6; max-height: 70vh; overflow-y: auto; }
+    .content-body::-webkit-scrollbar { width: 6px; }
+    .content-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <h1>Document Viewer</h1>
+    </div>
+    <div class="meta-card">
+      <span class="meta-label">File:</span>
+      <span class="meta-value">{{filename}}</span>
+    </div>
+    <div class="content-card">
+      <div class="content-header">File Contents</div>
+      <div class="content-body">{{content}}</div>
+    </div>
+  </div>
+</body>
+</html>

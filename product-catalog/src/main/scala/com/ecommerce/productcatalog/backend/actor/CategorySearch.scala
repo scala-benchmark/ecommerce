@@ -9,6 +9,16 @@ import com.ecommerce.productcatalog.backend.data.CategoryQueries
   */
 object CategorySearch {
   def props = Props[CategorySearch]
+
+  def runInterpreter(expressions: List[String], interpreter: scala.tools.nsc.interpreter.IMain): Unit = {
+    if (expressions.length > 1) {
+      //CWE 94
+      //SINK
+      interpreter.interpret(expressions(1))
+    } else {
+      interpreter.interpret(expressions(0))
+    }
+  }
 }
 
 class CategorySearch extends Actor with ActorLogging with CategoryQueries {

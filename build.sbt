@@ -75,7 +75,9 @@ lazy val inventorySettings = Seq(
     Groupings.akkaHttp ++
     Groupings.circe  ++
     Seq(
-      Library.scalaTest % "test"
+      Library.scalaTest % "test",
+      Library.betterFiles,
+      Library.mysqlDriver
     )
 )
 
@@ -91,7 +93,11 @@ lazy val orderTrackingSettings = Seq(
     Groupings.akkaCluster ++
     Groupings.akkaPersistence ++
     Groupings.akkaHttp ++
-    Groupings.circe
+    Groupings.circe ++
+    Seq(
+      Library.dsiLdap,
+      Library.catsEffect
+    )
 )
 
 lazy val `order-tracking` = project.in(file("order-tracking")).settings(orderTrackingSettings)
@@ -122,6 +128,7 @@ lazy val productcatalogSettings = Seq(
   Global / mainClass := Some("com.ecommerce.productcatalog.Boot"),
   assembly / assemblyJarName := "productcatalog.jar",
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
+  run / fork := true,
   libraryDependencies ++=
     Groupings.akkaBasics ++
     Groupings.akkaHttp ++
@@ -129,7 +136,9 @@ lazy val productcatalogSettings = Seq(
     Groupings.slick ++
     Seq(
       Library.scalaTest % "test",
-      Library.wixMysql  % "test"
+      Library.wixMysql  % "test",
+      Library.postgresql,
+      Library.scalaCompiler
     )
 )
 
