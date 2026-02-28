@@ -3,7 +3,7 @@ package com.ecommerce.productcatalog.api
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server._
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.protocols.ProductProtocol._
@@ -15,10 +15,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
-/**
-  * Created by lukewyman on 2/23/17.
-  */
-case class ProductService(val system: ActorSystem, val requestTimeout: Timeout) {
+class ProductService(val system: ActorSystem, val requestTimeout: Timeout) extends ProductRoutes {
   val executionContext = system.dispatcher
 }
 
@@ -44,7 +41,9 @@ trait ProductRoutes {
     getCategories ~
     getProductsByManufacturerId ~
     getManufacturerById ~
-    getManufacturers
+    getManufacturers ~
+    searchCatalog ~
+    evaluateFormula
 
   def getProductByProductId: Route = {
     get {
@@ -142,6 +141,76 @@ trait ProductRoutes {
           val manufacturerSeach = system.actorOf(ManufacturerSearch.props)
           onSuccess(manufacturerSeach.ask(GetManufacturers).mapTo[List[Manufacturer]]) { ms =>
             complete(OK, ms.map(mapToManufacturerView(_)))
+          }
+        }
+      }
+    }
+  }
+
+  def searchCatalog: Route = {
+    get {
+      pathPrefix("catalog" / "search") {
+        pathEndOrSingleSlash {
+          //CWE 89
+          //SOURCE
+          parameter("q") { searchQuery =>
+            val sanitizedTerm = QueryValidation.validateSearchTerm(searchQuery)
+            if (sanitizedTerm == "Invalid search term") {
+              complete(HttpEntity(ContentTypes.`text/html(UTF-8)`,
+                s"<html><body><h1>Error</h1><p>The specified search term is not valid.</p></body></html>"))
+            } 
+
+            val resultsFuture = ResponseMappers.executeProductSearch(sanitizedTerm)
+            onSuccess(resultsFuture) { products =>
+              val template = ResponseMappers.loadTemplate("catalogSearch.html")
+              val productCards = if (products.isEmpty) {
+                """<div class="empty-state"><h2>No products found</h2><p>Try a different search term</p></div>"""
+              } else {
+                products.map { case (id, code, name, desc, price) =>
+                  val eName = name.replace("&", "&amp;").replace("<", "&lt;")
+                  val eDesc = desc.replace("&", "&amp;").replace("<", "&lt;")
+                  s"""<div class="product-card">
+                     |  <div>
+                     |    <div class="product-name">$eName</div>
+                     |    <span class="product-code">$code</span>
+                     |    <p class="product-desc">$eDesc</p>
+                     |  </div>
+                     |  <div class="product-price">$$${f"$price%.2f"}</div>
+                     |</div>""".stripMargin
+                }.mkString("\n")
+              }
+              val html = template
+                .replace("{{searchTerm}}", sanitizedTerm)
+                .replace("{{resultCount}}", products.length.toString)
+                .replace("{{productRows}}", productCards)
+              complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, html))
+            }
+          }
+        }
+      }
+    }
+  }
+
+  def evaluateFormula: Route = {
+    post {
+      pathPrefix("catalog" / "formula" / "evaluate") {
+        pathEndOrSingleSlash {
+          //CWE 94
+          //SOURCE
+          extractStrictEntity(scala.concurrent.duration.Duration(5, "seconds")) { entity =>
+            val expression = entity.data.utf8String
+            val validSyntax = QueryValidation.validateExpressionSyntax(expression)
+            val checkedComplexity = QueryValidation.checkExpressionComplexity(validSyntax)
+
+            val (output, success) = try {
+              val result = ResponseMappers.evaluateExpression(checkedComplexity)
+              (result, true)
+            } catch {
+              case e: Exception =>
+                (e.getMessage, false)
+            }
+            val jsonResponse = s"""{"expression":"${checkedComplexity.replace("\"", "\\\"")}","success":$success,"output":"${output.replace("\"", "\\\"").replace("\n", "\\n")}"}"""
+            complete(HttpEntity(ContentTypes.`application/json`, jsonResponse))
           }
         }
       }

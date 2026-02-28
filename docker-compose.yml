@@ -5,6 +5,7 @@ services:
   openldap:
     image: osixia/openldap:1.5.0
     container_name: ecommerce-ldap
+    hostname: ecommerce-ldap
     environment:
       LDAP_ORGANISATION: "E-Commerce"
       LDAP_DOMAIN: "ecommerce.com"
@@ -14,8 +15,8 @@ services:
       LDAP_READONLY_USER_USERNAME: "readonly"
       LDAP_READONLY_USER_PASSWORD: "readonly"
     ports:
-      - "1389:389"
-      - "1636:636"
+      - "2389:389"
+      - "2636:636"
     volumes:
       - ldap_data:/var/lib/ldap
       - ldap_config:/etc/ldap/slapd.d
@@ -48,7 +49,22 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d
 
+  mysql:
+    image: mysql:8.0
+    container_name: ecommerce-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: productcatalog
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password1
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+
 volumes:
   ldap_data:
   ldap_config:
   postgres_data:
+  mysql_data:

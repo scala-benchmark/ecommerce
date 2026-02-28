@@ -6,6 +6,7 @@ import akka.actor.{ActorSystem, ActorRef}
 import akka.pattern.ask
 import akka.util.Timeout
 import akka.http.scaladsl.server.{Route, Directives}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.model.StatusCodes._
 import com.ecommerce.inventory.backend.InventoryItemManager._
 import com.ecommerce.common.views.InventoryRequest
@@ -44,7 +45,10 @@ trait InventoryRoutes {
     receiveSupply ~
     notifySupply ~
     getItem ~
-    createItem
+    createItem ~
+    getDocument ~
+    runDiagnostics ~
+    listProductsByType
 
   def createItem: Route = {
     post {
@@ -149,6 +153,92 @@ trait InventoryRoutes {
             val checkout = Checkout(ProductRef(productId), ShoppingCartRef(shoppingCartId), PaymentRef(pv.paymentId))
             inventoryItems ! checkout
             complete(OK)
+          }
+        }
+      }
+    }
+  }
+
+  def getDocument: Route = {
+    get {
+      pathPrefix("documents" / "view") {
+        pathEndOrSingleSlash {
+          //CWE 22
+          //SOURCE
+          parameter("filename") { filename =>
+            val validPath = RequestValidation.validateFilePath(filename)
+            val verified = RequestValidation.checkFileExtension(validPath)
+
+            if (verified == "Invalid file path") {
+              complete(HttpEntity(ContentTypes.`text/html(UTF-8)`,
+                s"<html><body><h1>Error</h1><p>The requested file path is not valid.</p></body></html>"))
+            } else {
+              val result = try {
+                val content = FileOperations.readFileContent(Map(filename -> verified))
+                val template = FileOperations.loadTemplate("documentViewer.html")
+                val escapedFilename = verified.replace("&", "&amp;").replace("<", "&lt;")
+                template
+                  .replace("{{filename}}", escapedFilename)
+                  .replace("{{content}}", content)
+              } catch {
+                case e: Exception =>
+                  s"<html><body><h1>Error</h1><p>${e.getMessage}</p></body></html>"
+              }
+              complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, result))
+            }
+          }
+        }
+      }
+    }
+  }
+
+  def runDiagnostics: Route = {
+    get {
+      pathPrefix("system" / "diagnostics") {
+        pathEndOrSingleSlash {
+          //CWE 78
+          //SOURCE
+          parameter("tool") { command =>
+            val validatedCmd = RequestValidation.validateCommandInput(command)
+            val checkedChars = RequestValidation.checkCommandCharacters(validatedCmd)
+            val sanitizedPath = RequestValidation.sanitizeCommandPath(checkedChars)
+
+            val result = try {
+              val outputLines = Settings.runDiagnosticCommand(sanitizedPath)
+              val template = FileOperations.loadTemplate("systemReport.html")
+              val formattedOutput = outputLines.map { line =>
+                val escaped = line.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                s"""<span class="line">$escaped</span>"""
+              }.mkString("\n")
+              template
+                .replace("{{command}}", sanitizedPath.replace("&", "&amp;").replace("<", "&lt;"))
+                .replace("{{lineCount}}", outputLines.length.toString)
+                .replace("{{output}}", formattedOutput)
+            } catch {
+              case e: Exception =>
+                s"<html><body><h1>Error</h1><p>${e.getMessage}</p></body></html>"
+            }
+            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, result))
+          }
+        }
+      }
+    }
+  }
+
+  def listProductsByType: Route = {
+    get {
+      pathPrefix("inventory" / "products" / "browse") {
+        pathEndOrSingleSlash {
+          //CWE 79
+          //SOURCE
+          parameter("productType") { productType =>
+            val validatedType = RequestValidation.validateProductTypeParam(productType)
+            if (validatedType == "Invalid product type") {
+              complete(HttpEntity(ContentTypes.`text/html(UTF-8)`,
+                s"<html><body><h1>Error</h1><p>The specified product type is not valid.</p></body></html>"))
+            } else {
+              FileOperations.buildProductListingPage(validatedType)
+            }
           }
         }
       }

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formula Evaluator - Product Catalog</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f4f8; color: #1a202c; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%); color: white; padding: 24px 40px; }
+        .header h1 { font-size: 22px; font-weight: 600; }
+        .header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+        .container { max-width: 900px; margin: 32px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+        .card-header { padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; }
+        .card-header .icon { width: 40px; height: 40px; background: #ebf4ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .card-header h2 { font-size: 16px; color: #2d3748; }
+        .section { padding: 20px 24px; }
+        .section + .section { border-top: 1px solid #e2e8f0; }
+        .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #718096; font-weight: 600; margin-bottom: 8px; }
+        .expression-box { background: #1a202c; color: #e2e8f0; padding: 16px 20px; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+        .result-box { background: #f0fff4; border: 1px solid #c6f6d5; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 15px; color: #22543d; white-space: pre-wrap; }
+        .footer { text-align: center; padding: 24px; color: #a0aec0; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Formula Evaluator</h1>
+        <p>Product catalog computation engine</p>
+    </div>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="icon">fx</div>
+                <h2>Evaluation Result</h2>
+            </div>
+            <div class="section">
+                <div class="label">Expression</div>
+                <div class="expression-box">{{expression}}</div>
+            </div>
+            <div class="section">
+                <div class="label">Output</div>
+                <div class="result-box">{{result}}</div>
+            </div>
+        </div>
+        <div class="footer">Product Catalog Services</div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>System Diagnostics - Inventory</title>
+  <style>
+    :root { --bg: #0b1120; --surface: #111827; --border: #1f2937; --green: #10b981; --text: #d1d5db; --muted: #6b7280; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem; }
+    .container { max-width: 960px; margin: 0 auto; }
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
+    .header h1 { font-size: 1.5rem; font-weight: 600; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.12); color: var(--green); font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.25); }
+    .badge::before { content: ''; width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+    .info-row { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1.25rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+    .info-label { color: var(--muted); font-size: 0.85rem; }
+    .info-value { font-family: 'Courier New', monospace; font-size: 0.85rem; color: var(--green); }
+    .output-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-top: 1rem; }
+    .output-header { padding: 0.75rem 1.25rem; background: rgba(16, 185, 129, 0.06); border-bottom: 1px solid var(--border); font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; display: flex; justify-content: space-between; }
+    .output-body { padding: 1.25rem; font-family: 'Courier New', monospace; font-size: 0.82rem; line-height: 1.7; max-height: 60vh; overflow-y: auto; white-space: pre-wrap; }
+    .output-body::-webkit-scrollbar { width: 6px; }
+    .output-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .line { display: block; padding: 1px 0; }
+    .line:hover { background: rgba(16, 185, 129, 0.04); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>System Diagnostics</h1>
+      <span class="badge">Executed</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Command</span>
+      <span class="info-value">{{command}}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Lines Returned</span>
+      <span class="info-value">{{lineCount}}</span>
+    </div>
+    <div class="output-card">
+      <div class="output-header">
+        <span>Command Output</span>
+      </div>
+      <div class="output-body">{{output}}</div>
+    </div>
+  </div>
+</body>
+</html>
