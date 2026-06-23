@@ -30,7 +30,8 @@ lazy val orchestratorSettings = Seq(
       Library.catsCore,
       Library.betterFiles,
       Library.scalatags,
-      Library.auth0Jwt
+      Library.auth0Jwt,
+      Library.akkaHttpSession
     )
 )
 

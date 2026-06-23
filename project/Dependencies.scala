@@ -74,6 +74,7 @@ object Library {
   val zioJdbc                  = "dev.zio"                    %% "zio-jdbc"                         % Version.zioJdbc
   val postgresql               = "org.postgresql"             %  "postgresql"                       % "42.7.1"
   val auth0Jwt                 = "com.auth0"                  %  "java-jwt"                         % "4.4.0"
+  val akkaHttpSession          = "com.softwaremill.akka-http-session" %% "core"                     % "0.7.0"
 }
 
 object Groupings {

@@ -4,7 +4,8 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.headers.RawHeader
+import akka.http.scaladsl.model.headers.{RawHeader, HttpCookie}
+import com.softwaremill.session.CookieConfig
 import akka.http.scaladsl.server.{Directives, _}
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient.HttpClientResult
@@ -53,9 +54,19 @@ trait ShoppingRoutes {
       pathPrefix("shop" / "customers" / CustomerId/ "shoppingcarts") { customerId =>
         pathEndOrSingleSlash {
           val orchestrator = system.actorOf(ShoppingOrchestrator.props)
-          val ss = StartShopping(ShoppingCartRef(UUID.randomUUID()), CustomerRef(customerId))
-          onSuccess(orchestrator.ask(ss).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
-            result.fold(complete(BadRequest, _), complete(OK, _))
+          val shoppingCartId = ShoppingCartRef(UUID.randomUUID())
+          val ss = StartShopping(shoppingCartId, CustomerRef(customerId))
+          //CWE 338
+          //SOURCE
+          val sessionToken = new scala.util.Random().nextLong().toString
+          val cookieCfg = sessionCookieConfig
+          //CWE 338
+          //SINK
+          setCookie(HttpCookie(cookieCfg.name, sessionToken,
+            secure = cookieCfg.secure, httpOnly = cookieCfg.httpOnly)) {
+            onSuccess(orchestrator.ask(ss).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
+              result.fold(complete(BadRequest, _), complete(OK, _))
+            }
           }
         }
       }
@@ -138,6 +149,12 @@ trait ShoppingRoutes {
         }
       }
     }
+  }
+
+  private def sessionCookieConfig: CookieConfig = {
+    //CWE 614 & CWE 1004
+    //SINK
+    CookieConfig("session", None, None, false, false, None)
   }
 
   private def issueReceiptToken(subject: String): String = {
