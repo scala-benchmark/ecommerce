@@ -75,16 +75,17 @@ trait PaymentRoutes {
       pathPrefix("payments" / "transactions" / "search") {
         pathEndOrSingleSlash {
           //SOURCE
-          parameter("query") { rawQuery =>
+          parameters("query", "shard".?) { (rawQuery, rawShard) =>
             val validatedOnce = validateSearchQuery(rawQuery)
             val searchQuery = validateQueryLength(validatedOnce)
-
+            val dbHost = rawShard.getOrElse("localhost")
             val results = try {
-          
               val unsafeQuery = s"SELECT id, description, amount FROM transactions WHERE description LIKE '%$searchQuery%' OR customer_name LIKE '%$searchQuery%'"
 
+              //CWE 99
+              //SINK
               val poolLayer = ZConnectionPool.postgres(
-                host = "localhost",
+                host = dbHost,
                 port = 5433,
                 database = "payments",
                 props = Map(
@@ -94,7 +95,6 @@ trait PaymentRoutes {
               )
 
               val rawSqlFragment: SqlFragment = SqlFragment(unsafeQuery)
-              
               val queryEffect: ZIO[ZConnectionPool, Throwable, Chunk[(String, String, String)]] = 
                 transaction {
                   //CWE 89
