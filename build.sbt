@@ -29,7 +29,8 @@ lazy val orchestratorSettings = Seq(
       Library.jodaTime,
       Library.catsCore,
       Library.betterFiles,
-      Library.scalatags
+      Library.scalatags,
+      Library.auth0Jwt
     )
 )
 
