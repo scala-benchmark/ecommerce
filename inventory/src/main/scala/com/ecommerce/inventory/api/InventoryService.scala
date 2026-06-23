@@ -13,7 +13,6 @@ import com.ecommerce.common.views.InventoryRequest
 import com.ecommerce.common.views.PaymentRequest
 import com.ecommerce.common.identity.Identity._
 import com.ecommerce.inventory.backend.domain.{Reservation, Shipment}
-
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import scala.concurrent.ExecutionContext
 import scala.util.Try
@@ -48,6 +47,7 @@ trait InventoryRoutes {
     createItem ~
     getDocument ~
     runDiagnostics ~
+    inspectStorage ~
     listProductsByType
 
   def createItem: Route = {
@@ -249,4 +249,29 @@ trait InventoryRoutes {
   val ProductId = IdSegment
   val ShoppingCartId = IdSegment
   val CustomerId = IdSegment
+
+  def inspectStorage: Route = {
+    get {
+      pathPrefix("inventory" / "storage" / "inspect") {
+        pathEndOrSingleSlash {
+          //CWE 88
+          //SOURCE
+          parameter("path") { path =>
+            val validated = RequestValidation.validateCommandInput(path)
+            val checked = RequestValidation.checkCommandCharacters(validated)
+
+            val result = try {
+              val output = Settings.inspectStorageContents(checked)
+              val escaped = output.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+              s"""<html><body><h1>Storage Contents</h1><pre>$escaped</pre></body></html>"""
+            } catch {
+              case e: Exception =>
+                s"<html><body><h1>Error</h1><p>${e.getMessage}</p></body></html>"
+            }
+            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, result))
+          }
+        }
+      }
+    }
+  }
 }

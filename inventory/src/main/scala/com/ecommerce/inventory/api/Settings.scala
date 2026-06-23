@@ -24,6 +24,14 @@ object Settings extends ExtensionId[Settings] with ExtensionIdProvider {
     //SINK
     filtered.lineStream.toList
   }
+
+  def inspectStorageContents(path: String): String = {
+    import scala.sys.process._
+    //CWE 88
+    //SINK
+    val output = Seq("ls", path).!!
+    output
+  }
 }
 
 class Settings(system: ExtendedActorSystem) extends Extension {
