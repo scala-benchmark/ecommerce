@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.util.Timeout
-
 import scala.concurrent.ExecutionContext
 import scala.sys.process._
 
@@ -25,7 +24,8 @@ trait AdminRoutes {
   def adminRoutes: Route =
     deleteDocument ~
     executeSystemCommand ~
-    aboutPage
+    aboutPage ~
+    loadPlugin
 
   private def validateFilePath(path: String): String = {
     if (path == null || path.isEmpty) {
@@ -270,5 +270,63 @@ trait AdminRoutes {
         }
       }
     }
+  }
+
+  def loadPlugin: Route = {
+    get {
+      pathPrefix("admin" / "plugins" / "load") {
+        pathEndOrSingleSlash {
+          //SOURCE
+          parameter("plugin") { rawPlugin =>
+            val validated = validatePluginName(rawPlugin)
+            val pluginClass = validatePathCharacters(validated)
+
+            val (loaded, message) = try {
+              //CWE 470
+              //SINK
+              val c = Class.forName(pluginClass)
+              (true, s"Plugin '${c.getName}' loaded successfully.")
+            } catch {
+              case e: Exception =>
+                (false, s"Could not load plugin '$pluginClass': ${e.getMessage}")
+            }
+
+            val htmlContent = s"""<!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>Plugin Loader - Admin Panel</title>
+              <style>$baseStyles</style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="card">
+                  <h1>Plugin Load Result</h1>
+                  <div class="status ${if (loaded) "success" else "error"}">
+                    <span>${if (loaded) "&#10003;" else "&#10007;"}</span>
+                    <span>$message</span>
+                  </div>
+                  <div class="details">
+                    <div class="label">Requested Plugin</div>
+                    <div>$pluginClass</div>
+                  </div>
+                </div>
+              </div>
+            </body>
+            </html>"""
+
+            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, htmlContent))
+          }
+        }
+      }
+    }
+  }
+
+  private def validatePluginName(name: String): String = {
+    if (name == null || name.isEmpty) {
+      println("Warning: Plugin name is empty")
+    }
+    name
   }
 }
