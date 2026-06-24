@@ -4,6 +4,8 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.{RawHeader, HttpCookie}
+import com.softwaremill.session.CookieConfig
 import akka.http.scaladsl.server.{Directives, _}
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient.HttpClientResult
@@ -13,6 +15,8 @@ import com.ecommerce.common.views.ShoppingCartResponse.ShoppingCartView
 import com.ecommerce.orchestrator.backend.RequestViews
 import com.ecommerce.orchestrator.backend.orchestrator.ShoppingOrchestrator
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 
 import scala.concurrent.ExecutionContext
 
@@ -50,9 +54,19 @@ trait ShoppingRoutes {
       pathPrefix("shop" / "customers" / CustomerId/ "shoppingcarts") { customerId =>
         pathEndOrSingleSlash {
           val orchestrator = system.actorOf(ShoppingOrchestrator.props)
-          val ss = StartShopping(ShoppingCartRef(UUID.randomUUID()), CustomerRef(customerId))
-          onSuccess(orchestrator.ask(ss).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
-            result.fold(complete(BadRequest, _), complete(OK, _))
+          val shoppingCartId = ShoppingCartRef(UUID.randomUUID())
+          val ss = StartShopping(shoppingCartId, CustomerRef(customerId))
+          //CWE 338
+          //SOURCE
+          val sessionToken = new scala.util.Random().nextLong().toString
+          val cookieCfg = sessionCookieConfig
+          //CWE 338
+          //SINK
+          setCookie(HttpCookie(cookieCfg.name, sessionToken,
+            secure = cookieCfg.secure, httpOnly = cookieCfg.httpOnly)) {
+            onSuccess(orchestrator.ask(ss).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
+              result.fold(complete(BadRequest, _), complete(OK, _))
+            }
           }
         }
       }
@@ -63,11 +77,18 @@ trait ShoppingRoutes {
     put {
       pathPrefix("shop" / "shoppingcarts" / ShoppingCartId / "items" / ProductId) { (shoppingCartId, productId) =>
         pathEndOrSingleSlash {
-          entity(as[AddItemView]) { aiv =>
-            val orchestrator = system.actorOf(ShoppingOrchestrator.props)
-            val pic = PlaceInCart(ShoppingCartRef(shoppingCartId), ProductRef(productId), aiv.count, aiv.backorder)
-            onSuccess(orchestrator.ask(pic).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
-              result.fold(complete(BadRequest, _), complete(OK, _))
+          //SOURCE
+          optionalHeaderValueByName("Authorization") { authHeader =>
+            val bearerToken = authHeader.map(_.stripPrefix("Bearer ")).getOrElse("")
+            val subject = validateSession(bearerToken)
+            respondWithHeader(RawHeader("X-Authenticated-Subject", subject)) {
+              entity(as[AddItemView]) { aiv =>
+                val orchestrator = system.actorOf(ShoppingOrchestrator.props)
+                val pic = PlaceInCart(ShoppingCartRef(shoppingCartId), ProductRef(productId), aiv.count, aiv.backorder)
+                onSuccess(orchestrator.ask(pic).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
+                  result.fold(complete(BadRequest, _), complete(OK, _))
+                }
+              }
             }
           }
         }
@@ -93,10 +114,17 @@ trait ShoppingRoutes {
     delete {
       pathPrefix("shop" / "shoppingcarts" / ShoppingCartId ) { shoppingCartId  =>
         pathEndOrSingleSlash {
-          val orchestrator = system.actorOf(ShoppingOrchestrator.props)
-          val ac = AbandonCart(ShoppingCartRef(shoppingCartId))
-          onSuccess(orchestrator.ask(ac).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
-            result.fold(complete(BadRequest, _), complete(OK, _))
+          //SOURCE
+          optionalHeaderValueByName("Authorization") { authHeader =>
+            val bearerToken = authHeader.map(_.stripPrefix("Bearer ")).getOrElse("")
+            val subject = decodeSession(bearerToken)
+            respondWithHeader(RawHeader("X-Authenticated-Subject", subject)) {
+              val orchestrator = system.actorOf(ShoppingOrchestrator.props)
+              val ac = AbandonCart(ShoppingCartRef(shoppingCartId))
+              onSuccess(orchestrator.ask(ac).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
+                result.fold(complete(BadRequest, _), complete(OK, _))
+              }
+            }
           }
         }
       }
@@ -109,14 +137,44 @@ trait ShoppingRoutes {
       pathPrefix("shop" / "shoppingcarts" / ShoppingCartId / "payments" ) { shoppingCartId =>
         pathEndOrSingleSlash {
           entity(as[CheckoutView]) { cv =>
-            val orchestrator = system.actorOf(ShoppingOrchestrator.props)
-            val co = Checkout(ShoppingCartRef(shoppingCartId), cv.creditCard)
-            onSuccess(orchestrator.ask(co).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
-              result.fold(complete(BadRequest, _), complete(OK, _))
+            val receiptToken = issueReceiptToken(shoppingCartId.toString)
+            respondWithHeader(RawHeader("X-Session-Token", receiptToken)) {
+              val orchestrator = system.actorOf(ShoppingOrchestrator.props)
+              val co = Checkout(ShoppingCartRef(shoppingCartId), cv.creditCard)
+              onSuccess(orchestrator.ask(co).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
+                result.fold(complete(BadRequest, _), complete(OK, _))
+              }
             }
           }
         }
       }
     }
+  }
+
+  private def sessionCookieConfig: CookieConfig = {
+    //CWE 614 & CWE 1004
+    //SINK
+    CookieConfig("session", None, None, false, false, None)
+  }
+
+  private def issueReceiptToken(subject: String): String = {
+    //CWE 321
+    //SINK
+    val alg = Algorithm.HMAC256("hardcoded-hmac-secret-0123456789")
+    JWT.create().withSubject(subject).sign(alg)
+  }
+
+  private def decodeSession(token: String): String = scala.util.Try {
+    //CWE 347
+    //SINK
+    val decoded = JWT.decode(token)
+    decoded.getSubject
+  }.getOrElse("anonymous")
+
+  private def validateSession(token: String): String = {
+    //CWE 287
+    //SINK
+    val verifier = JWT.require(Algorithm.none()).build()
+    scala.util.Try(verifier.verify(token)).map(_.getSubject).getOrElse("anonymous")
   }
 }
